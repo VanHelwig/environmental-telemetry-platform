@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Packaging
+*.egg-info/
+
+# Pytest
+.pytest_cache/
+
+# Local notes
+.notes
