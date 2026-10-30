@@ -1,8 +1,11 @@
-.PHONY: install test test-integration lint format format-check check clean help
+.PHONY: install test test-integration lint format format-check check clean container-build container-run container-clean help
 
 PYTHON := python
 RUFF := $(PYTHON) -m ruff
 PYTEST := $(PYTHON) -m pytest
+STATE ?= 48
+PARAMETER ?= 00060
+LIMIT ?= 5
 
 # Install development dependencies
 install:
@@ -37,6 +40,25 @@ clean:
 	find src tests -type d -name '__pycache__' -prune -exec rm -rf {} +
 	rm -rf .pytest_cache .ruff_cache
 
+# Build the ingestion container image
+container-build:
+	$(PODMAN) build -t $(IMAGE) -f Containerfile .
+
+# Run the ingestion container against local PostgreSQL
+container-run:
+	@test -n "$(DATABASE_URL)" || (echo "DATABASE_URL is not configured" && exit 1)
+	$(PODMAN) run --rm \
+		--network host \
+		-e DATABASE_URL \
+		$(IMAGE) \
+		--state $(STATE) \
+		--parameter $(PARAMETER) \
+		--limit $(LIMIT)
+
+# Remove the local ingestion container image
+container-clean:
+	$(PODMAN) rmi $(IMAGE)
+
 # Show available commands
 help:
 	@echo "Available commands:"
@@ -47,4 +69,7 @@ help:
 	@echo "  make format        	Fix lint issues and format code"
 	@echo "  make format-check  	Verify code formatting"
 	@echo "  make check         	Run lint, formatting checks, and tests"
+	@echo "  make container-build   Build the ingestion container"
+	@echo "  make container-run     Run containerized ingestion"
+	@echo "  make container-clean   Remove the local container image"
 	@echo "  make clean         	Remove generated cache files"
