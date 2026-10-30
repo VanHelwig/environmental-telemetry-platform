@@ -30,10 +30,10 @@ def db_conn():
         conn.close()
 
 
-def test_insert_observation(db_conn):
-    """Verify that an observation is persisted correctly."""
-
-    observation = Observation(
+@pytest.fixture
+def sample_observation():
+    """Provide a normalized observation for persistence tests."""
+    return Observation(
         source="test",
         source_series_id="test-series-001",
         station_id="TEST-001",
@@ -46,6 +46,12 @@ def test_insert_observation(db_conn):
         longitude=-97.7431,
         source_quality={"status": "approved", "test": True},
     )
+
+
+def test_insert_observation(db_conn, sample_observation):
+    """Verify that an observation is persisted correctly."""
+
+    observation = sample_observation
 
     inserted = insert_observations(db_conn, [observation])
 
@@ -90,3 +96,29 @@ def test_insert_observation(db_conn):
     assert row[8] == observation.latitude
     assert row[9] == observation.longitude
     assert row[10] == observation.source_quality
+
+
+def test_duplicate_observation(db_conn, sample_observation):
+    """Verify that repeated ingestion does not create duplicate rows."""
+    first_insert = insert_observations(db_conn, [sample_observation])
+    second_insert = insert_observations(db_conn, [sample_observation])
+
+    assert first_insert == 1
+    assert second_insert == 0
+
+    count = db_conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM observations
+        WHERE source = %s
+          AND source_series_id = %s
+          AND observed_at = %s
+        """,
+        (
+            sample_observation.source,
+            sample_observation.source_series_id,
+            sample_observation.observed_at,
+        ),
+    ).fetchone()[0]
+
+    assert count == 1
