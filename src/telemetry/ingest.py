@@ -1,16 +1,26 @@
-"""Run a small USGS ingestion sample without persistence."""
+"""Fetch, normalize, and persist USGS observations."""
 
-from telemetry.usgs import get_latest_usgs_observations, normalize_usgs_collection
+from telemetry.db import get_connection, insert_observations
+from telemetry.usgs import (
+    get_latest_usgs_observations,
+    normalize_usgs_collection,
+)
 
 
 def main() -> None:
     collection = get_latest_usgs_observations(
-        parameter_code="00060", state_code="48", limit=5
+        parameter_code="00060",
+        state_code="48",
+        limit=5,
     )
+
     observations = normalize_usgs_collection(collection)
-    print(f"Normalized {len(observations)} USGS observations")
-    for observation in observations:
-        print(observation)
+
+    with get_connection() as conn:
+        inserted = insert_observations(conn, observations)
+
+    print(f"Retrieved {len(observations)} USGS observations")
+    print(f"Inserted {inserted} new observations")
 
 
 if __name__ == "__main__":
