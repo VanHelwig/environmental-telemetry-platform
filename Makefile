@@ -1,8 +1,15 @@
+# Load local development environment variables
+-include .env
+
+export DATABASE_URL
+
 .PHONY: install test test-integration lint format format-check check clean container-build container-run container-clean help
 
 PYTHON := python
 RUFF := $(PYTHON) -m ruff
 PYTEST := $(PYTHON) -m pytest
+PODMAN := podman
+IMAGE := etp-ingest:dev
 STATE ?= 48
 PARAMETER ?= 00060
 LIMIT ?= 5
