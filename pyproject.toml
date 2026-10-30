@@ -15,6 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8,<10",
+    "ruff>=0.9,<1.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -23,3 +24,23 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E4",   # Import and related errors
+    "E7",   # Statement errors
+    "E9",   # Syntax errors
+    "F",    # Pyflakes
+    "I",    # Import sorting
+    "B",    # Common bug patterns
+    "UP",   # Python syntax modernization
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

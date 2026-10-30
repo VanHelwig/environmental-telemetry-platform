@@ -1,19 +1,28 @@
-import httpx
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+
+import httpx
 
 from telemetry.models import Observation
 
-USGS_API_URL = 'https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items'
+USGS_API_URL = (
+    "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items"
+)
 
 USGS_METRICS = {
     "00060": "streamflow",
 }
 
 
-def get_latest_usgs_observations(parameter_code: str, state_code: str, limit: int = 5) -> dict:
+def get_latest_usgs_observations(
+    parameter_code: str, state_code: str, limit: int = 5
+) -> dict:
     """Fetch the latest USGS observations for a parameter and state."""
-    params = {'parameter_code': parameter_code, 'state_code': state_code, 'limit': limit}
+    params = {
+        "parameter_code": parameter_code,
+        "state_code": state_code,
+        "limit": limit,
+    }
     r = httpx.get(USGS_API_URL, params=params)
     r.raise_for_status()
     return r.json()
@@ -39,7 +48,7 @@ def normalize_usgs_observation(feature: dict) -> Observation:
         value=value,
         unit=properties["unit_of_measure"],
         observed_at=observed_at,
-        ingested_at=datetime.now(timezone.utc),
+        ingested_at=datetime.now(UTC),
         latitude=coordinates[1],
         longitude=coordinates[0],
         source_quality={

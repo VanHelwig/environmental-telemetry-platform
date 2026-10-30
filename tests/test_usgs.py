@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import httpx
@@ -50,11 +50,14 @@ def test_normalize_usgs_observation():
     assert observation.metric == "streamflow"
     assert observation.value == Decimal("49.5")
     assert observation.unit == "ft^3/s"
-    assert observation.observed_at == datetime(2026, 9, 17, 19, 15, tzinfo=timezone.utc)
+    assert observation.observed_at == datetime(2026, 9, 17, 19, 15, tzinfo=UTC)
     assert observation.ingested_at.tzinfo is not None
     assert observation.latitude == 34.17896
     assert observation.longitude == -101.70267
-    assert observation.source_quality == {"approval_status": "Provisional", "qualifier": None}
+    assert observation.source_quality == {
+        "approval_status": "Provisional",
+        "qualifier": None,
+    }
 
 
 def test_missing_value():
@@ -67,7 +70,10 @@ def test_unsupported_parameter():
 
 
 def test_collection_normalization():
-    collection = {"type": "FeatureCollection", "features": [sample_feature(), sample_feature(value=None)]}
+    collection = {
+        "type": "FeatureCollection",
+        "features": [sample_feature(), sample_feature(value=None)],
+    }
     observations = normalize_usgs_collection(collection)
     assert len(observations) == 2
     assert observations[0].value == Decimal("49.5")

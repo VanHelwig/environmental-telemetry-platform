@@ -1,11 +1,10 @@
 """PostgreSQL connection management for the telemetry platform."""
 
 import os
+from collections.abc import Sequence
 
 import psycopg
 from psycopg import Connection
-from collections.abc import Sequence
-
 from psycopg.types.json import Jsonb
 
 from telemetry.models import Observation
