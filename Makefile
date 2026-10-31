@@ -3,16 +3,26 @@
 
 export DATABASE_URL
 
-.PHONY: install test test-integration lint format format-check check clean container-build container-run container-clean help
+.PHONY: install test test-integration lint format format-check check clean db-init db-backup container-build container-run container-clean help
 
+# Tooling configuration
 PYTHON := python
 RUFF := $(PYTHON) -m ruff
 PYTEST := $(PYTHON) -m pytest
 PODMAN := podman
+
+# Ingestion layer configuration
 IMAGE := etp-ingest:dev
 STATE ?= 48
 PARAMETER ?= 00060
 LIMIT ?= 5
+
+# Database configuration
+DB_CONTAINER := etp-postgres
+DB_NAME := telemetry
+DB_USER := etp
+DB_MIGRATION := sql/001_create_observations.sql
+BACKUP_DIR := backups
 
 # Install development dependencies
 install:
@@ -47,6 +57,19 @@ clean:
 	find src tests -type d -name '__pycache__' -prune -exec rm -rf {} +
 	rm -rf .pytest_cache .ruff_cache
 
+# Initialize the database schema (fresh database only)
+db-init:
+	$(PODMAN) exec -i $(DB_CONTAINER) \
+		psql -v ON_ERROR_STOP=1 -U $(DB_USER) -d $(DB_NAME) \
+		< $(DB_MIGRATION)
+
+# Back up the PostgreSQL database
+db-backup:
+	@mkdir -p $(BACKUP_DIR)
+	$(PODMAN) exec $(DB_CONTAINER) \
+		pg_dump -U $(DB_USER) -d $(DB_NAME) -Fc \
+		> $(BACKUP_DIR)/$(DB_NAME)-$$(date +%Y%m%d-%H%M%S).dump
+		
 # Build the ingestion container image
 container-build:
 	$(PODMAN) build -t $(IMAGE) -f Containerfile .

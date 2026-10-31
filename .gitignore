@@ -19,5 +19,8 @@ __pycache__/
 # Ruff
 .ruff_cache/
 
+# PostgreSQL backups
+backups/
+
 # Local notes
 .notes
