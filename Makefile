@@ -4,7 +4,7 @@
 export DATABASE_URL
 
 .PHONY: install test test-integration lint format format-check check clean 
-.PHONY: db-init db-backup db-start db-stop
+.PHONY: db-init db-backup db-create db-start db-stop
 .PHONY: container-build container-run container-clean 
 .PHONY: help
 
@@ -22,8 +22,12 @@ LIMIT ?= 5
 
 # Database configuration
 DB_CONTAINER := etp-postgres
+DB_IMAGE := docker.io/postgis/postgis:17-3.5
+DB_VOLUME := etp-postgres-data
+DB_NETWORK := kind
 DB_NAME := telemetry
 DB_USER := etp
+DB_PORT := 5432
 DB_MIGRATION := sql/001_create_observations.sql
 BACKUP_DIR := backups
 
@@ -72,6 +76,19 @@ db-backup:
 	$(PODMAN) exec $(DB_CONTAINER) \
 		pg_dump -U $(DB_USER) -d $(DB_NAME) -Fc \
 		> $(BACKUP_DIR)/$(DB_NAME)-$$(date +%Y%m%d-%H%M%S).dump
+
+# Create PostgreSQL using the persistent named volume
+db-create:
+	@test -n "$(DB_PASSWORD)" || (echo "DB_PASSWORD is not configured" && exit 1)
+	$(PODMAN) run -d \
+		--name $(DB_CONTAINER) \
+		--network $(DB_NETWORK) \
+		-e POSTGRES_USER=$(DB_USER) \
+		-e POSTGRES_PASSWORD="$(DB_PASSWORD)" \
+		-e POSTGRES_DB=$(DB_NAME) \
+		-p 127.0.0.1:$(DB_PORT):5432 \
+		-v $(DB_VOLUME):/var/lib/postgresql/data \
+		$(DB_IMAGE)
 
 # Start the existing PostgreSQL container
 db-start:
