@@ -79,7 +79,7 @@ db-backup:
 
 # Create PostgreSQL using the persistent named volume
 db-create:
-	@test -n "$(POSTGRES_PASSWORD)" || (echo "POSTGRES_PASSWORD is not configured" && exit 1)
+	@test -n "$$POSTGRES_PASSWORD" || (echo "POSTGRES_PASSWORD is not configured" && exit 1)
 	$(PODMAN) run -d \
 		--name $(DB_CONTAINER) \
 		--network $(DB_NETWORK) \
@@ -104,7 +104,7 @@ container-build:
 
 # Run the ingestion container against local PostgreSQL
 container-run:
-	@test -n "$$POSTGRES_PASSWORD" || (echo "POSTGRES_PASSWORD is not configured" && exit 1)
+	@test -n "$$DATABASE_URL" || (echo "DATABASE_URL is not configured" && exit 1)
 	$(PODMAN) run --rm \
 		--network host \
 		-e DATABASE_URL \
