@@ -4,7 +4,7 @@
 export DATABASE_URL
 
 .PHONY: install test test-integration lint format format-check check clean 
-.PHONY: db-init db-backup 
+.PHONY: db-init db-backup db-start db-stop
 .PHONY: container-build container-run container-clean 
 .PHONY: help
 
@@ -73,6 +73,14 @@ db-backup:
 		pg_dump -U $(DB_USER) -d $(DB_NAME) -Fc \
 		> $(BACKUP_DIR)/$(DB_NAME)-$$(date +%Y%m%d-%H%M%S).dump
 
+# Start the existing PostgreSQL container
+db-start:
+	$(PODMAN) start $(DB_CONTAINER)
+
+# Stop the PostgreSQL container
+db-stop:
+	$(PODMAN) stop $(DB_CONTAINER)
+
 # Build the ingestion container image
 container-build:
 	$(PODMAN) build -t $(IMAGE) -f Containerfile .
@@ -107,6 +115,8 @@ help:
 	@echo "Database:"
 	@echo "  make db-init             Initialize a fresh database schema"
 	@echo "  make db-backup           Create a timestamped PostgreSQL backup"
+	@echo "  make db-start            Start the existing PostgreSQL container"
+	@echo "  make db-stop             Stop the PostgreSQL container"
 	@echo ""
 	@echo "Containers:"
 	@echo "  make container-build     Build the ingestion container"
