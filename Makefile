@@ -3,7 +3,10 @@
 
 export DATABASE_URL
 
-.PHONY: install test test-integration lint format format-check check clean db-init db-backup container-build container-run container-clean help
+.PHONY: install test test-integration lint format format-check check clean 
+.PHONY: db-init db-backup 
+.PHONY: container-build container-run container-clean 
+.PHONY: help
 
 # Tooling configuration
 PYTHON := python
@@ -69,7 +72,7 @@ db-backup:
 	$(PODMAN) exec $(DB_CONTAINER) \
 		pg_dump -U $(DB_USER) -d $(DB_NAME) -Fc \
 		> $(BACKUP_DIR)/$(DB_NAME)-$$(date +%Y%m%d-%H%M%S).dump
-		
+
 # Build the ingestion container image
 container-build:
 	$(PODMAN) build -t $(IMAGE) -f Containerfile .
@@ -91,15 +94,21 @@ container-clean:
 
 # Show available commands
 help:
-	@echo "Available commands:"
-	@echo "  make install       	Install development dependencies"
-	@echo "  make test          	Run unit tests"
-	@echo "  make test-integration  Run database integration tests"
-	@echo "  make lint          	Run Ruff linting"
-	@echo "  make format        	Fix lint issues and format code"
-	@echo "  make format-check  	Verify code formatting"
-	@echo "  make check         	Run lint, formatting checks, and tests"
-	@echo "  make container-build   Build the ingestion container"
-	@echo "  make container-run     Run containerized ingestion"
-	@echo "  make container-clean   Remove the local container image"
-	@echo "  make clean         	Remove generated cache files"
+	@echo "Development:"
+	@echo "  make install             Install development dependencies"
+	@echo "  make test                Run unit tests"
+	@echo "  make test-integration    Run database integration tests"
+	@echo "  make lint                Run Ruff linting"
+	@echo "  make format              Fix lint issues and format code"
+	@echo "  make format-check        Verify code formatting"
+	@echo "  make check               Run lint, formatting checks, and tests"
+	@echo "  make clean               Remove generated cache files"
+	@echo ""
+	@echo "Database:"
+	@echo "  make db-init             Initialize a fresh database schema"
+	@echo "  make db-backup           Create a timestamped PostgreSQL backup"
+	@echo ""
+	@echo "Containers:"
+	@echo "  make container-build     Build the ingestion container"
+	@echo "  make container-run       Run containerized ingestion"
+	@echo "  make container-clean     Remove the local container image"
