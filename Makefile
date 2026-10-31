@@ -1,7 +1,7 @@
 # Load local development environment variables
 -include .env
 
-export DATABASE_URL
+export DATABASE_URL POSTGRES_PASSWORD
 
 .PHONY: install test test-integration lint format format-check check clean 
 .PHONY: db-init db-backup db-create db-start db-stop
@@ -79,12 +79,12 @@ db-backup:
 
 # Create PostgreSQL using the persistent named volume
 db-create:
-	@test -n "$(DB_PASSWORD)" || (echo "DB_PASSWORD is not configured" && exit 1)
+	@test -n "$(POSTGRES_PASSWORD)" || (echo "POSTGRES_PASSWORD is not configured" && exit 1)
 	$(PODMAN) run -d \
 		--name $(DB_CONTAINER) \
 		--network $(DB_NETWORK) \
 		-e POSTGRES_USER=$(DB_USER) \
-		-e POSTGRES_PASSWORD="$(DB_PASSWORD)" \
+		-e POSTGRES_PASSWORD \
 		-e POSTGRES_DB=$(DB_NAME) \
 		-p 127.0.0.1:$(DB_PORT):5432 \
 		-v $(DB_VOLUME):/var/lib/postgresql/data \
@@ -104,7 +104,7 @@ container-build:
 
 # Run the ingestion container against local PostgreSQL
 container-run:
-	@test -n "$(DATABASE_URL)" || (echo "DATABASE_URL is not configured" && exit 1)
+	@test -n "$$POSTGRES_PASSWORD" || (echo "POSTGRES_PASSWORD is not configured" && exit 1)
 	$(PODMAN) run --rm \
 		--network host \
 		-e DATABASE_URL \
@@ -132,6 +132,7 @@ help:
 	@echo "Database:"
 	@echo "  make db-init             Initialize a fresh database schema"
 	@echo "  make db-backup           Create a timestamped PostgreSQL backup"
+	@echo "  make db-create           Create PostgreSQL on the kind network"
 	@echo "  make db-start            Start the existing PostgreSQL container"
 	@echo "  make db-stop             Stop the PostgreSQL container"
 	@echo ""
