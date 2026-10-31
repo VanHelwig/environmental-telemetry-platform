@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: etp-ingest
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingest
+          image: localhost/etp-ingest:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: etp-database
+                  key: DATABASE_URL
+          args:
+            - "--state"
+            - "48"
+            - "--parameter"
+            - "00060"
+            - "--limit"
+            - "5"
