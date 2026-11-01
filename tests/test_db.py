@@ -126,3 +126,14 @@ def test_duplicate_observation(db_conn, sample_observation):
 
 def test_insert_empty_batch(db_conn):
     assert insert_observations(db_conn, []) == 0
+
+
+def test_distinct_observation_timestamps(db_conn, sample_observation):
+    from dataclasses import replace
+    from datetime import timedelta
+
+    later = replace(
+        sample_observation,
+        observed_at=sample_observation.observed_at + timedelta(minutes=15),
+    )
+    assert insert_observations(db_conn, [sample_observation, later]) == 2
