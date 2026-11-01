@@ -83,3 +83,64 @@ def test_collection_normalization():
 def test_collection_rejects_wrong_type():
     with pytest.raises(ValueError, match="FeatureCollection"):
         normalize_usgs_collection({"type": "Feature", "features": []})
+
+
+def test_empty_collection():
+    collection = {"type": "FeatureCollection", "features": []}
+    assert normalize_usgs_collection(collection) == []
+
+
+def test_naive_timestamp():
+    feature = sample_feature()
+    feature["properties"]["time"] = "2026-09-17T19:15:00"
+    with pytest.raises(ValueError, match="timezone"):
+        normalize_usgs_observation(feature)
+
+
+def test_invalid_numeric_value():
+    from decimal import InvalidOperation
+
+    with pytest.raises(InvalidOperation):
+        normalize_usgs_observation(sample_feature(value="not-a-number"))
+
+
+def test_missing_required_property():
+    feature = sample_feature()
+    del feature["properties"]["time_series_id"]
+    with pytest.raises(KeyError, match="time_series_id"):
+        normalize_usgs_observation(feature)
+
+
+def test_coordinate_order():
+    feature = sample_feature()
+    feature["geometry"]["coordinates"] = [-97.7431, 30.2672]
+    observation = normalize_usgs_observation(feature)
+    assert observation.longitude == -97.7431
+    assert observation.latitude == 30.2672
+
+
+def test_usgs_http_error(monkeypatch):
+    def mock_get(url, params):
+        return httpx.Response(503, request=httpx.Request("GET", url, params=params))
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(httpx.HTTPStatusError):
+        get_latest_usgs_observations("00060", "48", 5)
+
+
+def test_usgs_timeout(monkeypatch):
+    def mock_get(url, params):
+        raise httpx.ReadTimeout("USGS request timed out")
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(httpx.ReadTimeout):
+        get_latest_usgs_observations("00060", "48", 5)
+
+
+def test_usgs_connection_error(monkeypatch):
+    def mock_get(url, params):
+        raise httpx.ConnectError("USGS unavailable")
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(httpx.ConnectError):
+        get_latest_usgs_observations("00060", "48", 5)
