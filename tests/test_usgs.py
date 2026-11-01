@@ -88,3 +88,10 @@ def test_collection_rejects_wrong_type():
 def test_empty_collection():
     collection = {"type": "FeatureCollection", "features": []}
     assert normalize_usgs_collection(collection) == []
+
+
+def test_naive_timestamp():
+    feature = sample_feature()
+    feature["properties"]["time"] = "2026-09-17T19:15:00"
+    with pytest.raises(ValueError, match="timezone"):
+        normalize_usgs_observation(feature)
