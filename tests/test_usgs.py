@@ -117,3 +117,12 @@ def test_coordinate_order():
     observation = normalize_usgs_observation(feature)
     assert observation.longitude == -97.7431
     assert observation.latitude == 30.2672
+
+
+def test_usgs_http_error(monkeypatch):
+    def mock_get(url, params):
+        return httpx.Response(503, request=httpx.Request("GET", url, params=params))
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(httpx.HTTPStatusError):
+        get_latest_usgs_observations("00060", "48", 5)
