@@ -102,3 +102,10 @@ def test_invalid_numeric_value():
 
     with pytest.raises(InvalidOperation):
         normalize_usgs_observation(sample_feature(value="not-a-number"))
+
+
+def test_missing_required_property():
+    feature = sample_feature()
+    del feature["properties"]["time_series_id"]
+    with pytest.raises(KeyError, match="time_series_id"):
+        normalize_usgs_observation(feature)
