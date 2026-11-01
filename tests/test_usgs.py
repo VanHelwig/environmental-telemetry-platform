@@ -135,3 +135,12 @@ def test_usgs_timeout(monkeypatch):
     monkeypatch.setattr(httpx, "get", mock_get)
     with pytest.raises(httpx.ReadTimeout):
         get_latest_usgs_observations("00060", "48", 5)
+
+
+def test_usgs_connection_error(monkeypatch):
+    def mock_get(url, params):
+        raise httpx.ConnectError("USGS unavailable")
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(httpx.ConnectError):
+        get_latest_usgs_observations("00060", "48", 5)
