@@ -15,3 +15,8 @@ def test_positive_int_accepts_valid_number():
 def test_positive_int_rejects_zero():
     with pytest.raises(argparse.ArgumentTypeError, match="greater than zero"):
         ingest.positive_int("0")
+
+
+def test_positive_int_rejects_negative():
+    with pytest.raises(argparse.ArgumentTypeError, match="greater than zero"):
+        ingest.positive_int("-3")
