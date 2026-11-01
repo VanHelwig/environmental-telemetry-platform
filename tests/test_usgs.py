@@ -83,3 +83,8 @@ def test_collection_normalization():
 def test_collection_rejects_wrong_type():
     with pytest.raises(ValueError, match="FeatureCollection"):
         normalize_usgs_collection({"type": "Feature", "features": []})
+
+
+def test_empty_collection():
+    collection = {"type": "FeatureCollection", "features": []}
+    assert normalize_usgs_collection(collection) == []
