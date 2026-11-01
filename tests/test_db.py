@@ -122,3 +122,7 @@ def test_duplicate_observation(db_conn, sample_observation):
     ).fetchone()[0]
 
     assert count == 1
+
+
+def test_insert_empty_batch(db_conn):
+    assert insert_observations(db_conn, []) == 0
