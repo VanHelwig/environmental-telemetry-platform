@@ -109,3 +109,11 @@ def test_missing_required_property():
     del feature["properties"]["time_series_id"]
     with pytest.raises(KeyError, match="time_series_id"):
         normalize_usgs_observation(feature)
+
+
+def test_coordinate_order():
+    feature = sample_feature()
+    feature["geometry"]["coordinates"] = [-97.7431, 30.2672]
+    observation = normalize_usgs_observation(feature)
+    assert observation.longitude == -97.7431
+    assert observation.latitude == 30.2672
