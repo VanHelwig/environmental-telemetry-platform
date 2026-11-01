@@ -95,3 +95,10 @@ def test_naive_timestamp():
     feature["properties"]["time"] = "2026-09-17T19:15:00"
     with pytest.raises(ValueError, match="timezone"):
         normalize_usgs_observation(feature)
+
+
+def test_invalid_numeric_value():
+    from decimal import InvalidOperation
+
+    with pytest.raises(InvalidOperation):
+        normalize_usgs_observation(sample_feature(value="not-a-number"))
