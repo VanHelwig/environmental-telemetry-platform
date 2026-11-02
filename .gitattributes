@@ -1,3 +1,6 @@
+# Kubernetes and configuration
 *.yml linguist-detectable
 *.yaml linguist-detectable
+
+# Database
 *.sql linguist-detectable
