@@ -149,3 +149,34 @@ def test_mixed_duplicate_and_new_batch(db_conn, sample_observation):
     )
     assert insert_observations(db_conn, [sample_observation]) == 1
     assert insert_observations(db_conn, [sample_observation, later]) == 1
+
+
+def test_insert_null_observation_value(db_conn, sample_observation):
+    """Verify that a missing measurement persists as SQL NULL."""
+    from dataclasses import replace
+
+    observation = replace(
+        sample_observation,
+        source_series_id="test-series-null-value",
+        value=None,
+    )
+
+    assert insert_observations(db_conn, [observation]) == 1
+
+    row = db_conn.execute(
+        """
+        SELECT value
+        FROM observations
+        WHERE source = %s
+          AND source_series_id = %s
+          AND observed_at = %s
+        """,
+        (
+            observation.source,
+            observation.source_series_id,
+            observation.observed_at,
+        ),
+    ).fetchone()
+
+    assert row is not None
+    assert row[0] is None
