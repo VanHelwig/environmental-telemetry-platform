@@ -115,6 +115,8 @@ container-clean:
 	$(PODMAN) rmi $(IMAGE)
 
 # Show available commands
+
+# Show available commands
 help:
 	@echo "Development:"
 	@echo "  make install             Install development dependencies"
@@ -128,16 +130,18 @@ help:
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-init             Initialize a fresh database schema"
-	@echo "  make db-backup           Create a timestamped PostgreSQL backup"
-	@echo "  make db-create           Create PostgreSQL on the kind network"
-	@echo "  make db-start            Start the existing PostgreSQL container"
+	@echo "  make db-backup           Create a PostgreSQL backup"
+	@echo "  make db-create           Create the PostgreSQL container"
+	@echo "  make db-start            Start the PostgreSQL container"
 	@echo "  make db-stop             Stop the PostgreSQL container"
 	@echo ""
 	@echo "API:"
-	@echo "  make api                 Run the FastAPI application"
-	@echo "  make container-api       Run the FastAPI application in a container"
+	@echo "  make api                 Run FastAPI locally with auto-reload"
+	@echo "  make container-api       Run FastAPI in a container"
 	@echo ""
 	@echo "Ingestion:"
-	@echo "  make container-build     Build the ingestion container"
-	@echo "  make container-run       Run containerized ingestion"
-	@echo "  make container-clean     Remove the local container image"
+	@echo "  make container-run       Run containerized USGS ingestion"
+	@echo ""
+	@echo "Containers:"
+	@echo "  make container-build     Build the shared application image"
+	@echo "  make container-clean     Remove the application image"
