@@ -6,7 +6,7 @@
 .env.*
 !.env.example
 
-# Editor configuration
+# IDEs
 .vscode/
 
 # Python

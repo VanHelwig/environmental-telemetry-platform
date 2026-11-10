@@ -23,7 +23,7 @@ def get_latest_usgs_observations(
         "state_code": state_code,
         "limit": limit,
     }
-    r = httpx.get(USGS_API_URL, params=params)
+    r = httpx.get(USGS_API_URL, params=params, timeout=10.0)
     r.raise_for_status()
     return r.json()
 
