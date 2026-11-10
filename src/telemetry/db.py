@@ -93,3 +93,48 @@ def get_stations(conn) -> list[dict]:
             }
             for station_id, count in cur.fetchall()
         ]
+
+
+def get_station_observations(
+    conn: psycopg.Connection,
+    station_id: str,
+    limit: int = 100,
+) -> list[dict]:
+    """Return the latest observations for a station."""
+    query = """
+        SELECT
+            source,
+            source_series_id,
+            station_id,
+            metric,
+            value,
+            unit,
+            observed_at,
+            ST_Y(location::geometry) AS latitude,
+            ST_X(location::geometry) AS longitude,
+            source_quality
+        FROM observations
+        WHERE station_id = %s
+        ORDER BY observed_at DESC, id DESC
+        LIMIT %s
+    """
+
+    with conn.cursor() as cur:
+        cur.execute(query, (station_id, limit))
+        rows = cur.fetchall()
+
+    return [
+        {
+            "source": row[0],
+            "source_series_id": row[1],
+            "station_id": row[2],
+            "metric": row[3],
+            "value": float(row[4]) if row[4] is not None else None,
+            "unit": row[5],
+            "observed_at": row[6].isoformat(),
+            "latitude": row[7],
+            "longitude": row[8],
+            "source_quality": row[9],
+        }
+        for row in rows
+    ]
