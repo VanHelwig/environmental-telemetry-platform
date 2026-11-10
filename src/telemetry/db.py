@@ -71,3 +71,24 @@ def insert_observations(
             inserted += cur.rowcount
 
     return inserted
+
+def get_stations(conn) -> list[dict]:
+    """Return stations with stored observations."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                station_id,
+                COUNT(*) AS observation_count
+            FROM observations
+            GROUP BY station_id
+            ORDER BY station_id
+            """
+        )
+        return [
+            {
+                "station_id": station_id,
+                "observation_count": count,
+            }
+            for station_id, count in cur.fetchall()
+        ]
