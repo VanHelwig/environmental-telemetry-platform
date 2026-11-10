@@ -5,7 +5,7 @@ export DATABASE_URL POSTGRES_PASSWORD
 
 .PHONY: install test test-integration lint format format-check check clean 
 .PHONY: db-init db-backup db-create db-start db-stop
-.PHONY: api
+.PHONY: api container-api
 .PHONY: container-build container-run container-clean 
 .PHONY: help
 
@@ -16,7 +16,7 @@ PYTEST := $(PYTHON) -m pytest
 PODMAN := podman
 
 # Ingestion layer configuration
-IMAGE := etp-ingest:dev
+IMAGE := etp:dev
 STATE ?= 48
 PARAMETER ?= 00060
 LIMIT ?= 5
@@ -86,6 +86,14 @@ db-stop:
 api:
 	uvicorn telemetry.api:app --reload --host 127.0.0.1 --port 8000
 
+container-api:
+	@test -n "$$DATABASE_URL" || (echo "DATABASE_URL is not configured" && exit 1)
+	$(PODMAN) run --rm \
+		--network host \
+		-e DATABASE_URL \
+		$(IMAGE) \
+		uvicorn telemetry.api:app --host 0.0.0.0 --port 8000
+
 # Build the ingestion container image
 container-build:
 	$(PODMAN) build -t $(IMAGE) -f Containerfile .
@@ -97,6 +105,7 @@ container-run:
 		--network host \
 		-e DATABASE_URL \
 		$(IMAGE) \
+		python -m telemetry.ingest \
 		--state $(STATE) \
 		--parameter $(PARAMETER) \
 		--limit $(LIMIT)
@@ -124,7 +133,11 @@ help:
 	@echo "  make db-start            Start the existing PostgreSQL container"
 	@echo "  make db-stop             Stop the PostgreSQL container"
 	@echo ""
-	@echo "Containers:"
+	@echo "API:"
+	@echo "  make api                 Run the FastAPI application"
+	@echo "  make container-api       Run the FastAPI application in a container"
+	@echo ""
+	@echo "Ingestion:"
 	@echo "  make container-build     Build the ingestion container"
 	@echo "  make container-run       Run containerized ingestion"
 	@echo "  make container-clean     Remove the local container image"
