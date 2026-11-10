@@ -31,7 +31,9 @@ def sample_feature(value="49.5", parameter_code="00060"):
 def test_get_latest_usgs_observations(monkeypatch):
     expected_data = {"type": "FeatureCollection", "features": [], "numberReturned": 0}
 
-    def mock_get(url, params):
+    def mock_get(url, params, timeout):
+        assert timeout == 10.0
+        assert params == {"parameter_code": "00060", "state_code": "48", "limit": 5}
         return httpx.Response(
             200,
             json=expected_data,
@@ -120,7 +122,7 @@ def test_coordinate_order():
 
 
 def test_usgs_http_error(monkeypatch):
-    def mock_get(url, params):
+    def mock_get(url, params, timeout):
         return httpx.Response(503, request=httpx.Request("GET", url, params=params))
 
     monkeypatch.setattr(httpx, "get", mock_get)
@@ -129,7 +131,7 @@ def test_usgs_http_error(monkeypatch):
 
 
 def test_usgs_timeout(monkeypatch):
-    def mock_get(url, params):
+    def mock_get(url, params, timeout):
         raise httpx.ReadTimeout("USGS request timed out")
 
     monkeypatch.setattr(httpx, "get", mock_get)
@@ -138,9 +140,22 @@ def test_usgs_timeout(monkeypatch):
 
 
 def test_usgs_connection_error(monkeypatch):
-    def mock_get(url, params):
+    def mock_get(url, params, timeout):
         raise httpx.ConnectError("USGS unavailable")
 
     monkeypatch.setattr(httpx, "get", mock_get)
     with pytest.raises(httpx.ConnectError):
+        get_latest_usgs_observations("00060", "48", 5)
+
+
+def test_usgs_invalid_json(monkeypatch):
+    def mock_get(url, params, timeout):
+        return httpx.Response(
+            200,
+            text="invalid json",
+            request=httpx.Request("GET", url, params=params),
+        )
+
+    monkeypatch.setattr(httpx, "get", mock_get)
+    with pytest.raises(ValueError):
         get_latest_usgs_observations("00060", "48", 5)
