@@ -72,6 +72,7 @@ def insert_observations(
 
     return inserted
 
+
 def get_stations(conn) -> list[dict]:
     """Return stations with stored observations."""
     with conn.cursor() as cur:
