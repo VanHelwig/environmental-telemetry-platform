@@ -5,6 +5,7 @@ export DATABASE_URL POSTGRES_PASSWORD
 
 .PHONY: install test test-integration lint format format-check check clean 
 .PHONY: db-init db-backup db-create db-start db-stop
+.PHONY: api
 .PHONY: container-build container-run container-clean 
 .PHONY: help
 
@@ -80,6 +81,10 @@ db-start:
 # Stop the PostgreSQL container
 db-stop:
 	$(PODMAN) stop $(DB_CONTAINER)
+
+# Run the FastAPI application for the telemetry API
+api:
+	uvicorn telemetry.api:app --reload --host 127.0.0.1 --port 8000
 
 # Build the ingestion container image
 container-build:
