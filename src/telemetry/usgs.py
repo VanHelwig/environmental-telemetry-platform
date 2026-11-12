@@ -23,8 +23,18 @@ def get_latest_usgs_observations(
         "state_code": state_code,
         "limit": limit,
     }
-    r = httpx.get(USGS_API_URL, params=params, timeout=10.0)
-    r.raise_for_status()
+    try:
+        r = httpx.get(USGS_API_URL, params=params, timeout=10.0)
+        r.raise_for_status()
+    except httpx.TimeoutException as exc:
+        raise RuntimeError("Transient API failure: timeout") from exc
+    except httpx.RequestError as exc:
+        raise RuntimeError("Transient API failure: connection error") from exc
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code
+        if status == 429 or 500 <= status < 600:
+            raise RuntimeError(f"Transient API failure: HTTP {status}") from exc
+        raise RuntimeError(f"Permanent API failure: HTTP {status}") from exc
     return r.json()
 
 
